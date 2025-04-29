@@ -1,56 +1,54 @@
 import "./App.css";
 import { io } from "socket.io-client";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
 import { useState, useEffect } from "react";
+import L from "leaflet";
 
 const socket = io("https://special-doodle-xpwp59w7xx36vxj-3000.app.github.dev/");
 
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition(
-    (position) => {
-      const { latitude, longitude } = position.coords;
-      socket.emit("send-location", { latitude, longitude });
-    },
-    (error) => {
-      console.error(error);
-    },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 5000,
-    }
-  );
-}
+// Couleurs pour chaque cible
+const targetColors = {
+  Tindouf: "blue",
+  Bechar: "red",
+  "beni Abess": "green",
+};
 
-function MapUpdater({ markers }) {
+// Composant pour zoomer sur une polyline
+function MapUpdater({ polyline }) {
   const map = useMap();
 
   useEffect(() => {
-    if (Object.keys(markers).length > 0) {
-      const bounds = Object.values(markers).map(({ latitude, longitude }) => [
-        latitude,
-        longitude,
-      ]);
+    if (polyline.length > 0) {
+      const bounds = L.latLngBounds(polyline);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [markers, map]);
+  }, [polyline, map]);
 
   return null;
 }
 
 export default function App() {
-  const [markers, setMarkers] = useState({});
   const [polylines, setPolylines] = useState({}); // Stocker les lignes pour chaque utilisateur
 
   useEffect(() => {
+    // Écouter les données historiques
+    socket.on("historical-locations", (data) => {
+      const newPolylines = {};
+
+      // Parcourir les cibles et leurs emplacements
+      data.targets.forEach((target) => {
+        const { id, locations } = target;
+
+        // Ajouter les coordonnées pour chaque cible
+        newPolylines[id] = locations.map((location) => [location.lat, location.lng]);
+      });
+
+      setPolylines(newPolylines);
+    });
+
+    // Écouter les nouvelles localisations en temps réel
     socket.on("receive-location", (data) => {
       const { id, latitude, longitude } = data;
-
-      setMarkers((prevMarkers) => {
-        const newMarkers = { ...prevMarkers };
-        newMarkers[id] = { latitude, longitude };
-        return newMarkers;
-      });
 
       setPolylines((prevPolylines) => {
         const newPolylines = { ...prevPolylines };
@@ -62,50 +60,36 @@ export default function App() {
       });
     });
 
-    socket.on("disconnect", (data) => {
-      const { id } = data;
-      setMarkers((prevMarkers) => {
-        const newMarkers = { ...prevMarkers };
-        delete newMarkers[id];
-        return newMarkers;
-      });
-
-      setPolylines((prevPolylines) => {
-        const newPolylines = { ...prevPolylines };
-        delete newPolylines[id];
-        return newPolylines;
-      });
-    });
-
     return () => {
+      socket.off("historical-locations");
       socket.off("receive-location");
-      socket.off("disconnect");
     };
   }, []);
 
   return (
-    <MapContainer
-      className="markercluster-map"
-      center={[0, 0]}
-      zoom={4}
-      maxZoom={18}
-      minZoom={2}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-      />
-
-      <MapUpdater markers={markers} />
-
-      {Object.keys(markers).map((key) => {
-        const { latitude, longitude } = markers[key];
-        return <Marker key={key} position={[latitude, longitude]}></Marker>;
-      })}
-
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
       {Object.keys(polylines).map((key) => (
-        <Polyline key={key} positions={polylines[key]} color="blue" />
+        <div key={key} style={{ width: "45%", height: "400px" }}>
+          <h3>{key}</h3>
+          <MapContainer
+            className="markercluster-map"
+            style={{ height: "100%", width: "100%" }}
+            center={[0, 0]}
+            zoom={4}
+            maxZoom={18}
+            minZoom={2}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            />
+
+            <MapUpdater polyline={polylines[key]} />
+
+            <Polyline positions={polylines[key]} color={targetColors[key] || "black"} />
+          </MapContainer>
+        </div>
       ))}
-    </MapContainer>
+    </div>
   );
 }

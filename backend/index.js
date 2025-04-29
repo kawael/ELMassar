@@ -18,7 +18,7 @@ const io = new Server(server, {
 
 // Lire les données historiques depuis le fichier JSON
 const getHistoricalLocations = () => {
-    const data = fs.readFileSync('./backend/historical-locations.json', 'utf-8');
+    const data = fs.readFileSync('./historical-locations.json', 'utf-8');
     return JSON.parse(data);
 };
 
