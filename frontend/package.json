@@ -2,7 +2,6 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -10,10 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.21",
+    "framer-motion": "^12.9.2",
+    "leaflet-curve": "^1.0.0",
+    "leaflet.fullscreen": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
-    "socket.io-client": "^4.8.0"
+    "socket.io-client": "^4.8.0",
+    "tailwindcss": "^3.3.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

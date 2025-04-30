@@ -1,8 +1,6 @@
-* {
-  margin: 0;
-  padding: 0;
-}
-
-.markercluster-map{
-  height: 100vh;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.leaflet-control-attribution {
+  display: none !important;
 }

@@ -32,8 +32,10 @@ io.on('connection', (socket) => {
     // Envoyer les données historiques au client
     const historicalData = getHistoricalLocations();
     socket.emit('historical-locations', historicalData);
+    
+    console.log(historicalData);
+    socket.on('send-convoie', (data) => {
 
-    socket.on('send-location', (data) => {
         socket.emit('receive-location', { id: socket.id, ...data });
     });
 
