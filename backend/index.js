@@ -33,11 +33,11 @@ io.on('connection', (socket) => {
     const historicalData = getHistoricalLocations();
     socket.emit('historical-locations', historicalData);
     
-    console.log(historicalData);
-    socket.on('send-convoie', (data) => {
+    // console.log(historicalData);
+    // socket.on('send-convoie', (data) => {
 
-        socket.emit('receive-location', { id: socket.id, ...data });
-    });
+    //     socket.emit('receive-location', { id: socket.id, ...data });
+    // });
 
     socket.on('disconnect', () => {
         console.log('user disconnected');

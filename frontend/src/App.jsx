@@ -6,8 +6,11 @@ import L from "leaflet";
 import "leaflet.fullscreen";
 import "leaflet.fullscreen/Control.FullScreen.css";
 
-const socket = io("http://localhost:3000/");
-
+// const socket = io("http://localhost:3000/");
+const socket = io("https://special-doodle-xpwp59w7xx36vxj-3000.app.github.dev/");
+if (!socket) {
+  console.error("Socket connection failed.");
+}
 const targetColors = {
   "Convoi 1": "#D72638",
   "Convoi 2": "#D72638",
@@ -48,9 +51,11 @@ export default function App() {
 
   useEffect(() => {
     socket.on("historical-locations", (data) => {
-      console.log("Received historical locations:", data);
+      // console.log("Received historical locations:",typeof (data));
+      
+      const parsedData = JSON.parse(data);
       const newPolylines = {};
-      data.targets.forEach((target) => {
+      parsedData.forEach((target) => {
         const { id, locations } = target;
         newPolylines[id] = locations.map((location) => [location.lat, location.lng]);
       });
@@ -71,16 +76,16 @@ export default function App() {
 
     return () => {
       socket.off("historical-locations");
-      socket.off("receive-location");
+      // socket.off("receive-location");
     };
   }, []);
 
   const handleSelectChange = (e) => {
     const selected = e.target.value;
     setSelectedMap(selected);
-    // if (polylines[selected]) {
-    //   console.log("Polyline for", selected, ":", polylines[selected]);
-    // }
+    if (polylines[selected]) {
+      console.log("Polyline for", selected, ":", polylines[selected]);
+    }
   };
 
   return (
