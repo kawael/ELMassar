@@ -1,12 +1,18 @@
-import Page from "@/app/dashboard/dashboard";
 import './App.css'
+import { AppSidebar } from './components/app-sidebar';
+import { SiteHeader } from "./components/site-header";
+import { SidebarInset, SidebarProvider } from './components/ui/sidebar';
 
 function App() {
   
   return (
-    <>
-      <Page />
-    </>
+    
+    <SidebarProvider>
+      <AppSidebar variant="sidebar" />
+      <SidebarInset>
+            {/* <SiteHeader /> */}
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 
