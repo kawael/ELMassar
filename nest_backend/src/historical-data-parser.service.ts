@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { Location } from './target/location.entity';
 
 @Injectable()
 export class HistoricalDataParserService {
-  parseHistoricalLocations(data: any): any {
-    // Example: Parse the historical locations data and return a structured format
-    if (!data || !data.targets) {
-    return data.targets.map((target: any) => ({
-      id: target.name,
-      locations: target.locations.map((location: any) => ({
-        timestamp: new Date(location.timestamp),
-        latitude: location.lat,
-        longitude: location.lng,
-      })),
+  constructor(private readonly dataSource: DataSource) {}
+
+  async parseHistoricalLocations(): Promise<any[]> {
+    const locations = await this.dataSource.manager.find(Location, {
+      relations: ['target'],
+    });
+
+    return locations.map((location) => ({
+      lat: location.lat,
+      lng: location.lng,
+      timestamp: location.timestamp,
+      targetId: location.target ? location.target.name : null,
     }));
-  }else{
-    return [];
-  }
   }
 }

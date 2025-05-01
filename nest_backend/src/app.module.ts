@@ -3,8 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HistoricalDataParserService } from './historical-data-parser.service';
-import { FakeDataService } from './fake-data.service';
+// import { FakeDataService } from './fake-data.service';
 import { SocketIoGateway } from './socket-io.gateway';
+import { Location } from './target/location.entity';
 
 @Module({
   imports: [
@@ -26,8 +27,10 @@ import { SocketIoGateway } from './socket-io.gateway';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Set to false in production
     }),
+    TypeOrmModule.forFeature([Location]),
   ],
   controllers: [AppController],
-  providers: [AppService, FakeDataService,SocketIoGateway,HistoricalDataParserService ],
+  // FakeDataService,
+  providers: [AppService, SocketIoGateway,HistoricalDataParserService ],
 })
 export class AppModule {}

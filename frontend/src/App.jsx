@@ -36,9 +36,11 @@ function MapUpdater({ polyline }) {
   const map = useMap();
 
   useEffect(() => {
-    if (polyline.length > 0) {
-      const lastPoint = polyline[polyline.length - 1];
-      map.flyTo(lastPoint, map.getMaxZoom(), { animate: true });
+    if (polyline && polyline.length > 0) {
+      const bounds = L.latLngBounds(polyline);
+      map.fitBounds(bounds, { animate: true });
+      // const lastPoint = polyline[polyline.length - 1];
+      // map.flyTo(lastPoint, map.getMaxZoom(), { animate: true });
     }
   }, [polyline, map]);
 
@@ -46,46 +48,81 @@ function MapUpdater({ polyline }) {
 }
 
 export default function App() {
-  const [polylines, setPolylines] = useState({});
+  const [polylines, setPolylines] = useState([]);
   const [selectedMap, setSelectedMap] = useState(null);
+  const [optionsMap, setOptionsMap] = useState({});
 
   useEffect(() => {
-    socket.on("historical-locations", (data) => {
-      // console.log("Received historical locations:",typeof (data));
-      
-      const parsedData = JSON.parse(data);
-      const newPolylines = {};
-      parsedData.forEach((target) => {
-        const { id, locations } = target;
-        newPolylines[id] = locations.map((location) => [location.lat, location.lng]);
-      });
-      setPolylines(newPolylines);
-    });
+    socket.emit("request-target-ids");
 
-    socket.on("receive-location", (data) => {
-      const { id, latitude, longitude } = data;
-      setPolylines((prevPolylines) => {
-        const newPolylines = { ...prevPolylines };
-        if (!newPolylines[id]) {
-          newPolylines[id] = [];
-        }
-        newPolylines[id].push([latitude, longitude]);
-        return newPolylines;
+    socket.on("target-ids", (ids) => {
+      const newOption = {};
+      ids.forEach((targetId) => {
+        newOption[targetId.name] = [];
       });
+      setOptionsMap(newOption);
     });
 
     return () => {
-      socket.off("historical-locations");
-      // socket.off("receive-location");
+      socket.off("target-ids");
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedMap) {
+      socket.emit("select-target", selectedMap);
+    }
+  }, [selectedMap]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (selectedMap) {
+        socket.emit("request-last-location", selectedMap);
+      }
+    }, 10000);
+
+    socket.on("last-location", (data) => {
+      const { id, latitude, longitude,timestamp } = data;
+      if (id === selectedMap) {
+        setPolylines((prevPolylines) => {
+          const newPolylines = prevPolylines;
+          // if (!newPolylines) {
+          //   newPolylines = [];
+          // }
+          newPolylines.push({latitude, longitude, timestamp});
+          return newPolylines;
+        });
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.off("last-location");
+    };
+  }, [selectedMap]);
 
   const handleSelectChange = (e) => {
     const selected = e.target.value;
     setSelectedMap(selected);
-    if (polylines[selected]) {
-      console.log("Polyline for", selected, ":", polylines[selected]);
-    }
+    // if (polylines[selected]) {
+      // console.log("Polyline for", selected, ":", polylines[selected]);
+      // move the historical-locations receiver to here
+      socket.emit("select-target", selected);
+      socket.on("historical-locations", (data) => {
+        var locations = [];
+        data.locations.forEach((target) => {
+          const { lat, lng, timestamp } = target;
+          if (data.targetId === selected) {
+            locations = polylines;
+            const existingLocation = locations.find((location) => location.lat === lat && location.lng === lng);
+            if (!existingLocation) {
+              locations.push({ lat, lng, timestamp });
+            }
+          }
+        });
+        setPolylines(locations);
+      }); 
+    
   };
 
   return (
@@ -100,7 +137,7 @@ export default function App() {
           onChange={handleSelectChange}
         >
           <option value="" disabled>Select a map</option>
-          {Object.keys(polylines).map((key) => (
+          {Object.keys(optionsMap).map((key) => (
             <option key={key} value={key}>{key}</option>
           ))}
         </select>
@@ -141,10 +178,10 @@ export default function App() {
                 />
               </LayersControl.BaseLayer>
             </LayersControl>
-            <MapUpdater polyline={polylines[selectedMap]} />
-            <Polyline positions={polylines[selectedMap]} color={targetColors[selectedMap]} />
+            <MapUpdater polyline={polylines} />
+            <Polyline positions={polylines} color={targetColors[selectedMap]} />
             
-            {polylines[selectedMap]?.map((position, index, array) => (
+            {polylines?.map((position, index, array) => (
               <Marker key={index} position={position} icon={(index === array.length -1)? customIcon("Green"): customIcon("black")}>
                 <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={false} sticky>
                   <span><b>Point {index + 1}:</b></span>
