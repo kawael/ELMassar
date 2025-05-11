@@ -9,7 +9,12 @@ export class AppService {
     return 'Hello World!';
   }
 }
-
+@Injectable()
+export class LocationService {
+  getLocation(): string {
+    return 'Hello location!';
+  }
+}
 @Injectable()
 export class UserService {
   constructor(

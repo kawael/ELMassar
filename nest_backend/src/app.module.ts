@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController ,TargetLocationsController} from './app.controller';
+import { AppService,LocationService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HistoricalDataParserService } from './historical-data-parser.service';
 // import { FakeDataService } from './fake-data.service';
 import { SocketIoGateway } from './socket-io.gateway';
 import { Location } from './target/location.entity';
+import { Target } from './target/target.entity';
 
 @Module({
   imports: [
@@ -27,10 +28,10 @@ import { Location } from './target/location.entity';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Set to false in production
     }),
-    TypeOrmModule.forFeature([Location]),
+    TypeOrmModule.forFeature([Location, Target]),
   ],
-  controllers: [AppController],
+  controllers: [AppController,TargetLocationsController],
   // FakeDataService,
-  providers: [AppService, SocketIoGateway,HistoricalDataParserService ],
+  providers: [AppService, LocationService, SocketIoGateway,HistoricalDataParserService ],
 })
 export class AppModule {}

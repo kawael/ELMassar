@@ -4,3 +4,39 @@
 .leaflet-control-attribution {
   display: none !important;
 }
+
+/* Add styles for the direction marker to resemble a Google Maps arrow using ::before and ::after */
+.direction-icon {
+  position: relative;
+  width: 0;
+  height: 0;
+  display: none;
+  border: none;
+  /* border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 20px solid red; */
+  transform: rotate(0deg);
+}
+
+.direction-icon::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -5px;
+  width: 30px;
+  height: 30px;
+  background-color: red;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* .direction-icon::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+} */
+
