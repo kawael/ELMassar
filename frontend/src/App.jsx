@@ -142,35 +142,13 @@ function MapUpdater({ polyline, setTooltipDetails }) {
   return null;
 }
 
-function calculateDistance(polyline) {
-  if (!polyline || polyline.length < 2) return 0;
 
-  let totalDistance = 0;
-  for (let i = 1; i < polyline.length; i++) {
-    const prevPoint = L.latLng(polyline[i - 1].lat, polyline[i - 1].lng);
-    const currentPoint = L.latLng(polyline[i].lat, polyline[i].lng);
-    totalDistance += prevPoint.distanceTo(currentPoint); // Distance in meters
-  }
-
-  return totalDistance / 1000; // Convert to kilometers
-}
 
 export default function App() {
   const [polylines, setPolylines] = useState({});
   const [optionsMap, setOptionsMap] = useState({});
   const [tooltipDetails, setTooltipDetails] = useState([]);
   const mapRefs = useRef({});
-
-  // const handleTargetToggle = (targetId) => {
-  //   setOptionsMap((prevOptions) => {
-  //     const updatedOptions = { ...prevOptions };
-      
-  //     Object.keys(updatedOptions).forEach((key) => {
-  //       updatedOptions[key] = key === targetId;
-  //     });
-  //     return updatedOptions;
-  //   });
-  // };
 
   useEffect(() => {
     socket.emit("request-target-ids");
@@ -240,6 +218,7 @@ export default function App() {
         targets={optionsMap}
         setTarget= {setOptionsMap}
         tooltipDetails={tooltipDetails}
+        polylines={polylines}
       />
       <div className="flex-1">
         <h1 className="text-3xl font-bold text-center text-desert-sand mb-6">
